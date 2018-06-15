@@ -149,6 +149,7 @@ ClusterIcon.prototype.onAdd = function () {
     if (!cDraggingMapByCluster) {
       var theBounds;
       var mz;
+      var currentZoom;
       var mc = cClusterIcon.cluster_.getMarkerClusterer();
       /**
        * This event is fired when a cluster marker is clicked.
@@ -161,20 +162,23 @@ ClusterIcon.prototype.onAdd = function () {
 
       // The default click handler follows. Disable it by setting
       // the zoomOnClick property to false.
+      // CORE-PATCH begin by Markus Günther
+      // For more details look at the github issue https://github.com/googlemaps/v3-utility-library/issues/437
       if (mc.getZoomOnClick()) {
         // Zoom into the cluster.
         mz = mc.getMaxZoom();
+        currentZoom = mc.getMap().getZoom();
         theBounds = cClusterIcon.cluster_.getBounds();
+
         mc.getMap().fitBounds(theBounds);
         // There is a fix for Issue 170 here:
         setTimeout(function () {
+          var newZoom = (mz !== null && (currentZoom > mz) ? mz : currentZoom) + 1;
           mc.getMap().fitBounds(theBounds);
-          // Don't zoom beyond the max zoom level
-          if (mz !== null && (mc.getMap().getZoom() > mz)) {
-            mc.getMap().setZoom(mz + 1);
-          }
+          mc.getMap().setZoom(newZoom);
         }, 100);
       }
+      // CORE-PATCH end by Markus Günther
 
       // Prevent event propagation to the map:
       e.cancelBubble = true;
